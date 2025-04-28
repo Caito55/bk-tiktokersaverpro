@@ -1,4 +1,4 @@
-const TikTokScraper = require('tiktok-scraper');
+const TikTokScraper = require('tiktok-scraper-without-watermark');
 const redisClient = require('../config/redis');
 const logger = require('../utils/logger');
 const { ApiError } = require('../middleware/errorHandler');
@@ -26,23 +26,23 @@ class TiktokService {
             }
 
             // Obtener metadatos del video
-            const videoData = await TikTokScraper.getVideoMeta(url);
+            const videoData = await TikTokScraper.video(url);
             
-            if (!videoData || !videoData.collector || !videoData.collector[0]) {
+            if (!videoData || !videoData.id) {
                 throw new ApiError(404, 'No se pudo obtener información del video');
             }
 
             const metadata = {
-                id: videoData.collector[0].id,
-                desc: videoData.collector[0].desc,
-                author: videoData.collector[0].authorMeta.name,
-                duration: videoData.collector[0].videoMeta.duration,
-                thumbnail: videoData.collector[0].imageUrl,
+                id: videoData.id,
+                desc: videoData.description,
+                author: videoData.author.unique_id,
+                duration: videoData.duration,
+                thumbnail: videoData.thumbnail,
                 stats: {
-                    plays: videoData.collector[0].playCount,
-                    shares: videoData.collector[0].shareCount,
-                    comments: videoData.collector[0].commentCount,
-                    likes: videoData.collector[0].diggCount
+                    plays: videoData.play_count || 0,
+                    shares: videoData.share_count || 0,
+                    comments: videoData.comment_count || 0,
+                    likes: videoData.digg_count || 0
                 }
             };
 
@@ -73,29 +73,16 @@ class TiktokService {
             }
 
             // Obtener URLs del video
-            const videoData = await TikTokScraper.getVideoMeta(`https://www.tiktok.com/@user/video/${videoId}`);
+            const videoData = await TikTokScraper.video(`https://www.tiktok.com/@user/video/${videoId}`);
             
-            if (!videoData || !videoData.collector || !videoData.collector[0]) {
+            if (!videoData || !videoData.video) {
                 throw new ApiError(404, 'Video no encontrado');
             }
 
             let downloadUrl;
-            const videoUrls = videoData.collector[0].videoUrl;
-
-            // Seleccionar URL según calidad solicitada
-            switch (quality) {
-                case 'high':
-                    downloadUrl = videoUrls;
-                    break;
-                case 'medium':
-                    downloadUrl = videoData.collector[0].videoUrlNoWaterMark || videoUrls;
-                    break;
-                case 'low':
-                    downloadUrl = videoData.collector[0].videoUrlNoWaterMark || videoUrls;
-                    break;
-                default:
-                    downloadUrl = videoUrls;
-            }
+            
+            // La nueva biblioteca ya provee el video sin marca de agua por defecto
+            downloadUrl = videoData.video;
 
             if (!downloadUrl) {
                 throw new ApiError(404, 'No se encontró URL de descarga para la calidad solicitada');

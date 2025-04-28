@@ -13,7 +13,7 @@
     "cors": "^2.8.5",
     "express-rate-limit": "^7.1.5",
     "redis": "^4.6.13",
-    "tiktok-scraper": "^3.0.0",
+    "tiktok-scraper-without-watermark": "^1.1.2",
     "winston": "^3.11.0",
     "dotenv": "^16.4.1",
     "helmet": "^7.1.0",
