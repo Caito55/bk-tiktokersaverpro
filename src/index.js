@@ -11,7 +11,11 @@ const app = express();
 
 // Configuración básica
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+    origin: ['https://tiktok-hd-grabber.lovable.app', 'http://localhost:3000'],
+    methods: ['GET', 'POST'],
+    credentials: true
+}));
 app.use(express.json());
 
 // Rate limiting
